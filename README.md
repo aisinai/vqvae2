@@ -62,6 +62,7 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 ![VQ VAE Reconstructions.png](VQ_VAE_Reconstructions.png)
 
 3. Classification performance of DenseNet-121 as determined by AUROC was satisfactory with the original, reconstructed, *and* **compressed latent vector** as input.
+
 ![VQ VAE Classification.png](VQ_VAE_Classification.png)
 
 ## Contributing
