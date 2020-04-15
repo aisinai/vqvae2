@@ -73,7 +73,7 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 * Eric K Oermann MD |[github](https://github.com/RespectableGlioma)|[linkedin](https://www.linkedin.com/in/eric-oermann-b829528/)| Instructor, Department of Neurosurgery; Director, AISINAI; Icahn School of Medicine at Mount Sinai
 * Anthony B Costa PhD |[github](https://github.com/acoastalfog)|[linkedin](https://www.linkedin.com/in/anthony-costa-17005a64/)| Assistant Professor, Department of Neurosurgery; Director, Sinai BioDesign; Icahn School of Medicine at Mount Sinai
 
-See also the list of [contributors](https://github.com/kwonfred/vqvae2/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/aisinai/vqvae2/contributors) who participated in this project.
 
 ## License
 
