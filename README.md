@@ -65,10 +65,6 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 
 ![VQ VAE Classification.png](VQ_VAE_Classification.png)
 
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
 ## Authors
 
 * **Young Joon (Fred) Kwon MS** |[github](https://github.com/kwonfred)|[linkedin](https://www.linkedin.com/in/kwonfred/)| MD PhD Student; Icahn School of Medicine at Mount Sinai
