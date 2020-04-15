@@ -1,0 +1,6 @@
+/FID_Score/*
+/__pycache__/*
+/.ipynb_checkpoints/*
+*.ipynb
+prototyping_dataset.py
+
