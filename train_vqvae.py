@@ -19,7 +19,7 @@ parser.add_argument('--lr', type=float, default=3e-4)
 parser.add_argument('--first_stride', type=int, default=4, help="2, 4, 8, or 16")
 parser.add_argument('--second_stride', type=int, default=2, help="2, 4, 8, or 16")
 parser.add_argument('--embed_dim', type=int, default=64)
-parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets/uncropped')
+parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets')
 parser.add_argument('--dataset', type=str, default='CheXpert', help="CheXpert or mimic")
 parser.add_argument('--view', type=str, default='frontal', help="frontal or lateral")
 parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200422/vq_vae')
@@ -28,20 +28,20 @@ args = parser.parse_args()
 torch.manual_seed(816)
 
 save_path=f'{args.save_path}/{args.dataset}/{args.train_run}'
+os.makedirs(save_path, exist_ok=True)
+os.makedirs(f'{save_path}/checkpoint/', exist_ok=True)
+os.makedirs(f'{save_path}/sample/', exist_ok=True)
 with open(f'{save_path}/args.txt', 'w') as f:
     for key in vars(args).keys():
         f.write(f'{key}: {vars(args)[key]}\n')
         print(f'{key}: {vars(args)[key]}')
-os.makedirs(save_path, exist_ok=True)
-os.makedirs(f'{save_path}/checkpoint/', exist_ok=True)
-os.makedirs(f'{save_path}/sample/', exist_ok=True)
 
 dataloaders = {}
-dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_256_norm_True_{args.view}.hdf5'),
+dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{args.view}.hdf5'),
                                   batch_size=128,
                                   shuffle=True,
                                   drop_last=True)
-dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_256_norm_True_{args.view}.hdf5'),
+dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.view}.hdf5'),
                                   batch_size=128,
                                   shuffle=True,
                                   drop_last=True)

@@ -23,17 +23,18 @@ parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of firs
 parser.add_argument("--weight_decay", type=float, default=0.1e-5, help="adam: weight decay (L2 penalty)")
 parser.add_argument('--first_stride', type=int, default=4)
 parser.add_argument('--second_stride', type=int, default=2)
+parser.add_argument('--embed_dim', type=int, default=64)
 parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets/uncropped')
 parser.add_argument('--dataset', type=str, default='mimic')
 parser.add_argument('--view', type=str, default='frontal')
 parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200317/densenet121')
-parser.add_argument('--train_ID', type=str, default='0')
+parser.add_argument('--train_run', type=str, default='0')
 parser.add_argument('--vqvae_file', type=str, default='vqvae_031.pt')
 args = parser.parse_args()
 print(args)
 torch.manual_seed(816)
 
-save_path = f'{args.save_path}/{args.dataset}/{args.train_ID}'
+save_path = f'{args.save_path}/embed_dim_{args.embed_dim}/{args.train_run}'
 os.makedirs(save_path, exist_ok=True)
 
 CLASS_NAMES = ['No Finding', 'Enlarged Cardiomediastinum', 'Cardiomegaly', 'Lung Opacity', 'Lung Lesion',
@@ -51,16 +52,18 @@ dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset
                                   drop_last=True)
 
 if cuda:
-    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride).cuda()
+    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim).cuda()
 else:
-    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride)
+    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim)
 
-vqvae_path = f'/home/aisinai/work/VQ-VAE2/20200311/vq_vae/{args.train_ID}/checkpoint/{args.vqvae_file}'
+vqvae_path = f'/home/aisinai/work/VQ-VAE2/20200311/vq_vae/{args.train_run}/checkpoint/{args.vqvae_file}'
 vqvae_pretrain.load_state_dict(torch.load(vqvae_path))
-
-model = models.densenet121(pretrained=True)
-num_ftrs = model.classifier.in_features
-model.classifier = nn.Sequential(nn.Linear(num_ftrs, args.n_classes), nn.Sigmoid())
+if args.embed_dim == 1:
+    model = Densenet121()
+else:
+    model = models.densenet121(pretrained=True)
+    num_ftrs = model.classifier.in_features
+    model.classifier = nn.Sequential(nn.Linear(num_ftrs, args.n_classes), nn.Sigmoid())
 model = model.cuda() if cuda else model
 
 n_gpu = torch.cuda.device_count()
@@ -72,9 +75,9 @@ if n_gpu > 1:
 lr = args.lr
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 criterion = nn.BCELoss()
-# [0,:,:] index for train, [1,:,:] index for val
-losses = np.zeros((2, args.n_epochs))
-aurocs = np.zeros((2, args.n_epochs, args.n_classes))
+
+losses = np.zeros((2, args.n_epochs))  # [0,:] for train, [1,:] for val
+aurocs = np.zeros((2, args.n_epochs, args.n_classes))  # [0,:] for train, [1,:] for val
 best_loss = 999999
 
 for epoch in range(args.n_epochs):
@@ -87,11 +90,16 @@ for epoch in range(args.n_epochs):
             real_img = Variable(img.type(Tensor))
             real_targets = Variable(label.cuda()) if cuda else Variable(label)
             decoded_img, _ = vqvae_pretrain(real_img)
+            quant_t, quant_b, _, _, _ = vqvae_pretrain.encode(real_img)
+            upsample_t = vqvae_pretrain.upsample_t(quant_t)
+            quant = torch.cat([upsample_t, quant_b], 1)
             with torch.set_grad_enabled(phase == 'train'):
-                output_C = model(decoded_img)
+                if args.embed_dim == 1:
+                    output_C = model(quant)
+                else:
+                    output_C = model(decoded_img)
                 gt = torch.cat((gt, real_targets.cuda()), 0)
                 pred = torch.cat((pred, output_C.cuda()), 0)
-
                 # calculate gradient and update parameters in train phase
                 optimizer.zero_grad()
                 c_loss = criterion(output_C, real_targets)
