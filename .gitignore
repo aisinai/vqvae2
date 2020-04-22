@@ -3,4 +3,4 @@
 /.ipynb_checkpoints/*
 *.ipynb
 prototyping_dataset.py
-
+/test_images/*

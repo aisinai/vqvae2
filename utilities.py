@@ -1,9 +1,12 @@
+import os
 import h5py
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from PIL import Image, ImageOps
 from torch.autograd import Variable
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -27,6 +30,76 @@ class ChestXrayHDF5(Dataset):
 
     def __len__(self):
         return self.hdf5_database["img"].shape[0]
+
+
+class CXRDataset(Dataset):
+    def __init__(self, dataset, img_dir, image_list_file, img_size, num_label, view, transform=None):
+        """
+        Args:
+            data_dir: path to image directory.
+            image_list_file: path to the file containing images
+                with corresponding labels.
+            mode: 'frontal' or 'lateral'
+            transform: optional transform to be applied on a sample.
+        """
+        view = view.lower()
+        image_names = []
+        labels = []
+
+        f = open(image_list_file, 'r')
+        d = '\t'
+        reader = csv.reader(f, delimiter=d)
+        next(reader, None)
+        for row in reader:
+            if dataset == 'CheXpert':
+                items = row[0].split(',')
+                image_name = os.path.join(img_dir, items[0][20:])
+                img_view = items[3].lower()
+                label = items[5:]
+            elif dataset == 'mimic':
+                items = row[0].split(',')
+                image_name = f'{img_dir}/{items[0]}'
+                img_view = items[1].lower()
+                label = items[2:]
+            indices = [i for i, x in enumerate(label) if x == "1.0"]
+            output = np.zeros(num_label)
+            if img_view == view:
+                for index in indices:
+                    output[index] = 1
+                    output[index] = int(output[index])
+                labels.append(output)
+                image_names.append(image_name)
+
+        self.image_names = image_names
+        self.labels = labels
+        self.img_size = img_size
+        self.transform = transform
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index: the index of item
+        Returns:
+            image and its label
+        """
+        image_name = self.image_names[index]
+        im = Image.open(image_name).convert('RGB')
+        old_size = im.size
+        ratio = float(self.img_size)/max(old_size)
+        new_size = tuple([int(x*ratio) for x in old_size])
+        im = im.resize(new_size, Image.ANTIALIAS)
+        # create pads
+        image = Image.new("RGB", (self.img_size, self.img_size))
+        # paste resized image in the middle of padding
+        image.paste(im, ((self.img_size-new_size[0])//2,
+                         (self.img_size-new_size[1])//2))
+        label = self.labels[index]
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, label
+
+    def __len__(self):
+        return len(self.image_names)
 
 
 def recon_image(n_row, original_img, model, save_path, epoch, Tensor):
