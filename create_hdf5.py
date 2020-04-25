@@ -18,8 +18,8 @@ parser.add_argument('--crop_size', type=int, default = 256)
 parser.add_argument('--CXR_dataset', type=str, default = 'CheXpert')
 args = parser.parse_args()
 
-IMG_DIR = f'/home/aisinai/work/{args.CXR_dataset}'
-DATA_DIR = f'/home/aisinai/work/{args.CXR_dataset}'
+IMG_DIR = f'/home/aisinai/data/{args.CXR_dataset}'
+DATA_DIR = f'/home/aisinai/data/{args.CXR_dataset}'
 HDF5_DIR = '/home/aisinai/work/HDF5_datasets'
 os.makedirs(HDF5_DIR, exist_ok=True)
 

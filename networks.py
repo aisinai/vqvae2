@@ -252,7 +252,7 @@ class VQVAE(nn.Module):
 
 
 class Densenet121(nn.Module):
-    def __init__(self, n_classes=15):
+    def __init__(self, n_classes=14):
         super().__init__()
 
         self.init_conv = nn.ConvTranspose2d(2, 3, 1, stride=1, padding=0)  # takes 2 channel input, converts to 3 channels

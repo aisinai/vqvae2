@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torchvision import models
 from tqdm import tqdm
-from networks import VQVAE
+from networks import VQVAE, Densenet121
 from utilities import ChestXrayHDF5, compute_AUCs, save_loss_AUROC_plots
 
 cuda = True if torch.cuda.is_available() else False
@@ -16,7 +16,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 parser = argparse.ArgumentParser()
 parser.add_argument('--size', type=int, default=256)
 parser.add_argument('--n_epochs', type=int, default=5600)
-parser.add_argument('--n_classes', type=int, default=15)
+parser.add_argument('--n_classes', type=int, default=14)
 parser.add_argument("--lr", type=float, default=0.0001, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
@@ -24,53 +24,46 @@ parser.add_argument("--weight_decay", type=float, default=0.1e-5, help="adam: we
 parser.add_argument('--first_stride', type=int, default=4)
 parser.add_argument('--second_stride', type=int, default=2)
 parser.add_argument('--embed_dim', type=int, default=64)
-parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets/uncropped')
-parser.add_argument('--dataset', type=str, default='mimic')
+parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets/recon_latent')
+parser.add_argument('--dataset', type=str, default='CheXpert')
 parser.add_argument('--view', type=str, default='frontal')
-parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200317/densenet121')
+parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200424/densenet121')
 parser.add_argument('--train_run', type=str, default='0')
-parser.add_argument('--vqvae_file', type=str, default='vqvae_031.pt')
+parser.add_argument('--vqvae_file', type=str, default='vqvae_040.pt')
 args = parser.parse_args()
 print(args)
 torch.manual_seed(816)
 
-save_path = f'{args.save_path}/embed_dim_{args.embed_dim}/{args.train_run}'
-os.makedirs(save_path, exist_ok=True)
 
 CLASS_NAMES = ['No Finding', 'Enlarged Cardiomediastinum', 'Cardiomegaly', 'Lung Opacity', 'Lung Lesion',
                'Edema', 'Consolidation', 'Pneumonia', 'Atelectasis', 'Pneumothorax', 'Pleural Effusion',
-               'Pleural Other', 'Fracture', 'Support Devices', 'No Positive Labels']
+               'Pleural Other', 'Fracture', 'Support Devices']
 
-dataloaders = {}
-dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_256_norm_True_{args.view}.hdf5'),
-                                  batch_size=8,
-                                  shuffle=True,
-                                  drop_last=True)
-dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_256_norm_True_{args.view}.hdf5'),
-                                  batch_size=8,
-                                  shuffle=True,
-                                  drop_last=True)
-
-if cuda:
-    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim).cuda()
-else:
-    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim)
-
-vqvae_path = f'/home/aisinai/work/VQ-VAE2/20200311/vq_vae/{args.train_run}/checkpoint/{args.vqvae_file}'
-vqvae_pretrain.load_state_dict(torch.load(vqvae_path))
 if args.embed_dim == 1:
-    model = Densenet121()
+    recon = 'latent'
+    model = Densenet121(n_classes=args.n_classes)
 else:
+    recon = 'recon'
     model = models.densenet121(pretrained=True)
     num_ftrs = model.classifier.in_features
     model.classifier = nn.Sequential(nn.Linear(num_ftrs, args.n_classes), nn.Sigmoid())
+save_path = f'{args.save_path}/embed_dim_{args.embed_dim}/{recon}'
+os.makedirs(save_path, exist_ok=True)
 model = model.cuda() if cuda else model
-
 n_gpu = torch.cuda.device_count()
 if n_gpu > 1:
     device_ids = list(range(n_gpu))
-    vqvae_pretrain = nn.DataParallel(vqvae_pretrain, device_ids=device_ids)
     model = nn.DataParallel(model, device_ids=device_ids)
+
+dataloaders = {}
+dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{recon}.hdf5'),
+                                  batch_size=64,
+                                  shuffle=True,
+                                  drop_last=True)
+dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{recon}.hdf5'),
+                                  batch_size=64,
+                                  shuffle=True,
+                                  drop_last=True)
 
 lr = args.lr
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
@@ -89,15 +82,8 @@ for epoch in range(args.n_epochs):
         for i, (img, label) in enumerate(loader):
             real_img = Variable(img.type(Tensor))
             real_targets = Variable(label.cuda()) if cuda else Variable(label)
-            decoded_img, _ = vqvae_pretrain(real_img)
-            quant_t, quant_b, _, _, _ = vqvae_pretrain.encode(real_img)
-            upsample_t = vqvae_pretrain.upsample_t(quant_t)
-            quant = torch.cat([upsample_t, quant_b], 1)
             with torch.set_grad_enabled(phase == 'train'):
-                if args.embed_dim == 1:
-                    output_C = model(quant)
-                else:
-                    output_C = model(decoded_img)
+                output_C = model(real_img)
                 gt = torch.cat((gt, real_targets.cuda()), 0)
                 pred = torch.cat((pred, output_C.cuda()), 0)
                 # calculate gradient and update parameters in train phase
@@ -133,7 +119,6 @@ for epoch in range(args.n_epochs):
         for i in range(args.n_classes):
             print(f'The AUROC of {CLASS_NAMES[i]} is {auroc[i]:.4f}')
         save_loss_AUROC_plots(args.n_epochs, epoch, losses, aurocs, save_path)
-    torch.save(model.state_dict(),
-               f'{save_path}/densenet_{str(epoch + 1).zfill(3)}.pt')
+    torch.save(model.state_dict(), f'{save_path}/densenet_{str(epoch + 1).zfill(3)}.pt')
     torch.save(losses, f'{save_path}/losses.pt')
     torch.save(aurocs, f'{save_path}/aurocs.pt')

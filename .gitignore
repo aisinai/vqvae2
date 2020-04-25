@@ -4,3 +4,4 @@
 *.ipynb
 prototyping_dataset.py
 /test_images/*
+/file_sizes/*
