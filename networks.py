@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torchvision import models
+from pytorch_memlab import profile
 
 # Copyright 2018 The Sonnet Authors. All Rights Reserved.
 #
@@ -252,16 +253,19 @@ class VQVAE(nn.Module):
 
 
 class Densenet121(nn.Module):
-    def __init__(self, n_classes=14):
+    def __init__(self, n_classes=14, input_type='latent'):
         super().__init__()
 
-        self.init_conv = nn.ConvTranspose2d(2, 3, 1, stride=1, padding=0)  # takes 2 channel input, converts to 3 channels
+        # takes 2 channel input, converts to 3 channels
+        self.input_type = input_type
+        self.init_conv = nn.ConvTranspose2d(2, 3, 1, stride=1, padding=0)
         self.model = models.densenet121(pretrained=True)
         self.num_ftrs = self.model.classifier.in_features
         self.model.classifier = nn.Sequential(nn.Linear(self.num_ftrs, n_classes), nn.Sigmoid())
 
+    @profile
     def forward(self, input):
-        input_3 = self.init_conv(input)
-        output = self.model(input_3)
+        if self.input_type == 'latent':
+            input = self.init_conv(input)  # convert to 3 channel input
+        output = self.model(input)
         return output
-

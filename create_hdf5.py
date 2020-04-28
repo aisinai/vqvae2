@@ -13,9 +13,9 @@ from utilities import CXRDataset
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--img_size', type=int, default = 256)
-parser.add_argument('--crop_size', type=int, default = 256)
-parser.add_argument('--CXR_dataset', type=str, default = 'CheXpert')
+parser.add_argument('--img_size', type=int, default=256)
+parser.add_argument('--crop_size', type=int, default=256)
+parser.add_argument('--CXR_dataset', type=str, default='CheXpert')
 args = parser.parse_args()
 
 IMG_DIR = f'/home/aisinai/data/{args.CXR_dataset}'
@@ -29,13 +29,14 @@ mean = [0.485, 0.456, 0.406]  # ImageNet mean
 std = [0.229, 0.224, 0.225]  # ImageNet std
 normalization = transforms.Normalize(mean=mean, std=std)
 transform_array = [transforms.Resize(args.img_size),
-                   transforms.CenterCrop(args.crop_size), 
-                   transforms.ToTensor(), 
+                   transforms.CenterCrop(args.crop_size),
+                   transforms.ToTensor(),
                    normalization]
 
 # Generate HDF5 dataset
-for mode in ['train', 'valid']:
-    for view in ['frontal', 'lateral']:
+for mode in ['valid', 'train']:
+    #     for view in ['frontal', 'lateral']:
+    for view in ['frontal']:
         image_list_file = f'{DATA_DIR}/{mode}.csv'
         dataset = CXRDataset(dataset=args.CXR_dataset,
                              img_dir=IMG_DIR,
@@ -55,8 +56,8 @@ for mode in ['train', 'valid']:
             hdf5['img'][i, ...] = img
             hdf5['labels'][i] = label
             if (i + 1) % 100 == 0:
-                print(f'{args.CXR_dataset}_{mode}_{args.crop_size}_{view}.hdf5:'\
-                        f'{i + 1}/{num_images} images completed')
+                print(f'{args.CXR_dataset}_{mode}_{args.crop_size}_{view}.hdf5:'
+                      f'{i + 1}/{num_images} images completed')
             elif i + 1 == num_images:
-                print(f'{args.CXR_dataset}_{mode}_{args.crop_size}_{view}.hdf5:'\
-                        f'{i + 1}/{num_images} images completed')
+                print(f'{args.CXR_dataset}_{mode}_{args.crop_size}_{view}.hdf5:'
+                      f'{i + 1}/{num_images} images completed')

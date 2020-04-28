@@ -27,7 +27,7 @@ parser.add_argument('--train_run', type=str, default='0')
 args = parser.parse_args()
 torch.manual_seed(816)
 
-save_path=f'{args.save_path}/{args.dataset}/{args.train_run}'
+save_path = f'{args.save_path}/{args.dataset}/{args.train_run}'
 os.makedirs(save_path, exist_ok=True)
 os.makedirs(f'{save_path}/checkpoint/', exist_ok=True)
 os.makedirs(f'{save_path}/sample/', exist_ok=True)

@@ -5,9 +5,8 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-from torchvision import models
 from tqdm import tqdm
-from networks import VQVAE, Densenet121
+from networks import Densenet121
 from utilities import ChestXrayHDF5, compute_AUCs, save_loss_AUROC_plots
 
 cuda = True if torch.cuda.is_available() else False
@@ -23,13 +22,13 @@ parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of firs
 parser.add_argument("--weight_decay", type=float, default=0.1e-5, help="adam: weight decay (L2 penalty)")
 parser.add_argument('--first_stride', type=int, default=4)
 parser.add_argument('--second_stride', type=int, default=2)
-parser.add_argument('--embed_dim', type=int, default=64)
+parser.add_argument('--embed_dim', type=int, default=1)
 parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets/recon_latent')
-parser.add_argument('--dataset', type=str, default='CheXpert')
+parser.add_argument('--dataset', type=str, default='mimic')
 parser.add_argument('--view', type=str, default='frontal')
-parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200424/densenet121')
-parser.add_argument('--train_run', type=str, default='0')
+parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200427/densenet121')
 parser.add_argument('--vqvae_file', type=str, default='vqvae_040.pt')
+parser.add_argument('--recon', type=str, default='latent', help="input type; 'orig', 'recon', or 'latent'")
 args = parser.parse_args()
 print(args)
 torch.manual_seed(816)
@@ -39,15 +38,8 @@ CLASS_NAMES = ['No Finding', 'Enlarged Cardiomediastinum', 'Cardiomegaly', 'Lung
                'Edema', 'Consolidation', 'Pneumonia', 'Atelectasis', 'Pneumothorax', 'Pleural Effusion',
                'Pleural Other', 'Fracture', 'Support Devices']
 
-if args.embed_dim == 1:
-    recon = 'latent'
-    model = Densenet121(n_classes=args.n_classes)
-else:
-    recon = 'recon'
-    model = models.densenet121(pretrained=True)
-    num_ftrs = model.classifier.in_features
-    model.classifier = nn.Sequential(nn.Linear(num_ftrs, args.n_classes), nn.Sigmoid())
-save_path = f'{args.save_path}/embed_dim_{args.embed_dim}/{recon}'
+model = Densenet121(n_classes=args.n_classes, input_type=args.recon)
+save_path = f'{args.save_path}/{args.recon}'
 os.makedirs(save_path, exist_ok=True)
 model = model.cuda() if cuda else model
 n_gpu = torch.cuda.device_count()
@@ -56,11 +48,11 @@ if n_gpu > 1:
     model = nn.DataParallel(model, device_ids=device_ids)
 
 dataloaders = {}
-dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{recon}.hdf5'),
+dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{args.recon}.hdf5'),
                                   batch_size=64,
                                   shuffle=True,
                                   drop_last=True)
-dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{recon}.hdf5'),
+dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.recon}.hdf5'),
                                   batch_size=64,
                                   shuffle=True,
                                   drop_last=True)
@@ -119,6 +111,7 @@ for epoch in range(args.n_epochs):
         for i in range(args.n_classes):
             print(f'The AUROC of {CLASS_NAMES[i]} is {auroc[i]:.4f}')
         save_loss_AUROC_plots(args.n_epochs, epoch, losses, aurocs, save_path)
+        print('END')
     torch.save(model.state_dict(), f'{save_path}/densenet_{str(epoch + 1).zfill(3)}.pt')
     torch.save(losses, f'{save_path}/losses.pt')
     torch.save(aurocs, f'{save_path}/aurocs.pt')

@@ -21,7 +21,7 @@ parser.add_argument('--first_stride', type=int, default=4)
 parser.add_argument('--second_stride', type=int, default=2)
 parser.add_argument('--embed_dim', type=int, default=64)
 parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets')
-parser.add_argument('--dataset', type=str, default='CheXpert')
+parser.add_argument('--dataset', type=str, default='mimic')
 parser.add_argument('--view', type=str, default='frontal')
 parser.add_argument('--save_path', type=str, default='/home/aisinai/work/HDF5_datasets/recon_latent')
 parser.add_argument('--train_run', type=str, default='0')
@@ -37,7 +37,8 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 # Load model
 vqvae_path = f'/home/aisinai/work/VQ-VAE2/20200422/vq_vae/CheXpert/{args.train_run}/checkpoint/{args.vqvae_file}'
 if cuda:
-    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim).cuda()
+    vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride,
+                           embed_dim=args.embed_dim).cuda()
 else:
     vqvae_pretrain = VQVAE(first_stride=args.first_stride, second_stride=args.second_stride, embed_dim=args.embed_dim)
 vqvae_pretrain.load_state_dict(torch.load(vqvae_path))
@@ -72,7 +73,7 @@ for phase in ['train', 'valid']:
         upsample_t = vqvae_pretrain.upsample_t(quant_t)
         quant = torch.cat([upsample_t, quant_b], 1)
         for j in range(img.shape[0]):
-            hdf5_recon['img'][i*args.batch_size+j,:]=decoded_img.cpu().detach().numpy()[j,:]
-            hdf5_recon['labels'][i*args.batch_size+j]=targets.cpu().detach().numpy()[j]
-            hdf5_latent['img'][i*args.batch_size+j,:]=quant.cpu().detach().numpy()[j,:]
-            hdf5_latent['labels'][i*args.batch_size+j]=targets.cpu().detach().numpy()[j]
+            hdf5_recon['img'][i * args.batch_size + j, :] = decoded_img.cpu().detach().numpy()[j, :]
+            hdf5_recon['labels'][i * args.batch_size + j] = targets.cpu().detach().numpy()[j]
+            hdf5_latent['img'][i * args.batch_size + j, :] = quant.cpu().detach().numpy()[j, :]
+            hdf5_latent['labels'][i * args.batch_size + j] = targets.cpu().detach().numpy()[j]

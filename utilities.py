@@ -85,14 +85,14 @@ class CXRDataset(Dataset):
         image_name = self.image_names[index]
         im = Image.open(image_name).convert('RGB')
         old_size = im.size
-        ratio = float(self.img_size)/max(old_size)
-        new_size = tuple([int(x*ratio) for x in old_size])
+        ratio = float(self.img_size) / max(old_size)
+        new_size = tuple([int(x * ratio) for x in old_size])
         im = im.resize(new_size, Image.ANTIALIAS)
         # create pads
         image = Image.new("RGB", (self.img_size, self.img_size))
         # paste resized image in the middle of padding
-        image.paste(im, ((self.img_size-new_size[0])//2,
-                         (self.img_size-new_size[1])//2))
+        image.paste(im, ((self.img_size - new_size[0]) // 2,
+                         (self.img_size - new_size[1]) // 2))
         label = self.labels[index]
         if self.transform is not None:
             image = self.transform(image)
