@@ -4,14 +4,15 @@ This repository has repurposed the generative architecture of [Razabi et al.'s M
 Additionally, the compressed latent vectors and reconstructed images have been used to train the [CheXNet](https://stanfordmlgroup.github.io/projects/chexnet/) (DenseNet-121 pre-trained on ImageNet) algorithm. 
 
 ## Usage
+
 ### Architecture
 This repository supports two-level VQ-VAE (top and bottom hierachical layers). The vector quantization workflow is outline below.
 
-![VQ VAE Quantization Architecture](VQ_VAE_Quantization_Architecture.png)
+![VQ VAE Quantization Architecture](figures/VQ_VAE_Quantization_Architecture.png)
 
 Two levels of convolution based encoding captures both local (first-layer) and global (second-layer) features. 
 
-![VQ VAE Multi-Level Architecture](VQ_VAE_Multi-Level_Architecture.png)
+![VQ VAE Multi-Level Architecture](figures/VQ_VAE_Multi-Level_Architecture.png)
 
 We converted our datasets into [HDF5 formats](https://portal.hdfgroup.org/display/HDF5/HDF5) as inputs for faster training. We used the [MIMIC-CXR](https://physionet.org/content/mimic-cxr/2.0.0/) and the [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/) datasets for training and external validation.
 
@@ -28,6 +29,12 @@ We converted our datasets into [HDF5 formats](https://portal.hdfgroup.org/displa
 
 
 ## Getting Started
+
+### Create HDF5 Dataset
+
+We used HDF5 datasets to create and save padded images such that the training does not require pre-processing each time.
+
+![VQ VAE Preprocessing](figures/VQ_VAE_Preprocessing.png)
 
 ### Training
 
@@ -49,21 +56,42 @@ Note: strides increase in multiples of 2: `2, 4, 8, 16`
 ```
 python train_densenet.py --vqvae_file=[CHECK POINT FILE FROM ABOVE TRAINING]
 ```
+The training of DenseNet-121 can be conducted with original images, latent vectors, or reconstructed images:
+
+![VQ VAE Classification Schematic](figures/VQ_VAE_Classification_Schematic.png)
+
 Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory from the training.
+
+### Testing
+
+Use the `test_model.ipynb` Jupyter Notebook to:
+1. To create a padded image from any image file to fit into a square perspective ratio
+
+2. To save reconstructed images from trained models
+
+3. To calculate PSNR from saved images (from `create_images.py`)
+
 
 ### Results
 
 1. Loss curves are automatically generated in the `[save_path]` directory from the training.
 
-![VQ VAE Loss Graphs.png](VQ_VAE_Loss_Graphs.png)
+![VQ VAE Loss Graphs.png](figures/VQ_VAE_Loss_Graphs.png)
 
 2. Reconstruction performance is satisfactory when evaluated with external datasets. In the example below, the algorithm trained with the CheXpert dataset (frontal view) and externally validated with the MIMIC-CXR dataset (both frontal and lateral views).
 
-![VQ VAE Reconstructions.png](VQ_VAE_Reconstructions.png)
+![VQ VAE Reconstructions.png](figures/VQ_VAE_Reconstructions.png)
 
-3. Classification performance of DenseNet-121 as determined by AUROC was satisfactory with the original, reconstructed, *and* **compressed latent vector** as input.
+The trained model is robust to various input manipulations. Input image above, reconstructed image below:
 
-![VQ VAE Classification.png](VQ_VAE_Classification.png)
+![VQ VAE Input Manipluation.png](figures/VQ_VAE_Input_Manipluation.png)
+
+3. Classification performance of DenseNet-121 as determined by AUROC was satisfactory with the original and actually **increased** reconstructed, *and* **compressed latent vector** as input. We suspect that the VQ-VAE-2 is acting as a denoising autoencoder.
+
+![VQ VAE Classification.png](figures/VQ_VAE_Classification.png)
+
+Download links for: [saved models](https://app.box.com/s/5kr33l9qx61maolzyb5zspac5ml9tnc2) and [images from the validation MIMIC-CXR dataset](https://app.box.com/s/16fpwv9jvi99a290wssk7nc7esfol5ci)
+
 
 ## Authors
 
@@ -73,11 +101,11 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 * Eric K Oermann MD |[github](https://github.com/RespectableGlioma)|[linkedin](https://www.linkedin.com/in/eric-oermann-b829528/)| Instructor, Department of Neurosurgery; Director, AISINAI; Icahn School of Medicine at Mount Sinai
 * Anthony B Costa PhD |[github](https://github.com/acoastalfog)|[linkedin](https://www.linkedin.com/in/anthony-costa-17005a64/)| Assistant Professor, Department of Neurosurgery; Director, Sinai BioDesign; Icahn School of Medicine at Mount Sinai
 
-See also the list of [contributors](https://github.com/aisinai/vqvae2/contributors) who participated in this project.
 
 ## License
 
 This project is licensed under the APACHE License, version 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details
+
 
 ## Acknowledgments
 
