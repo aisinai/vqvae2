@@ -1,15 +1,13 @@
 import argparse
 import os
-import numpy as np
 import h5py
 import torch
-from torch import nn, optim
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-from torchvision import models
 from tqdm import tqdm
-from networks import VQVAE, Densenet121
-from utilities import ChestXrayHDF5, compute_AUCs, save_loss_AUROC_plots
+from networks import VQVAE
+from utilities import ChestXrayHDF5
 
 cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor

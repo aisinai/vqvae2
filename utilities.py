@@ -185,3 +185,10 @@ def save_loss_AUROC_plots(n_epochs, latest_epoch, losses, AUROCs, save_path):
 
     plt.close(fig)
     fig.savefig(f'{save_path}/loss and AUROC graphs.png')
+
+
+def rgb2gray(original_img):
+    r, g, b = original_img[0, :], original_img[1, :], original_img[2, :]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+
+    return gray

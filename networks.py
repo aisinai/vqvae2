@@ -263,7 +263,7 @@ class Densenet121(nn.Module):
         self.num_ftrs = self.model.classifier.in_features
         self.model.classifier = nn.Sequential(nn.Linear(self.num_ftrs, n_classes), nn.Sigmoid())
 
-    @profile
+    # @profile
     def forward(self, input):
         if self.input_type == 'latent':
             input = self.init_conv(input)  # convert to 3 channel input
