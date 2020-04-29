@@ -84,13 +84,13 @@ Use the `test_model.ipynb` Jupyter Notebook to:
 
 The trained model is robust to various input manipulations. Input image above, reconstructed image below:
 
-![VQ VAE Input Manipluation.png](figures/VQ_VAE_Input_Manipluation.png)
+![VQ VAE Input Manipluation.png](figures/VQ_VAE_Input_Manipulation.png)
 
 3. Classification performance of DenseNet-121 as determined by AUROC was satisfactory with the original and actually **increased** reconstructed, *and* **compressed latent vector** as input. We suspect that the VQ-VAE-2 is acting as a denoising autoencoder.
 
 ![VQ VAE Classification.png](figures/VQ_VAE_Classification.png)
 
-Download links for: [saved models](https://app.box.com/s/5kr33l9qx61maolzyb5zspac5ml9tnc2) and [images from the validation MIMIC-CXR dataset](https://app.box.com/s/16fpwv9jvi99a290wssk7nc7esfol5ci)
+Download links for: [saved models](https://app.box.com/s/5kr33l9qx61maolzyb5zspac5ml9tnc2) and [original and reconstructed images from the validation MIMIC-CXR dataset](https://app.box.com/s/16fpwv9jvi99a290wssk7nc7esfol5ci)
 
 
 ## Authors
