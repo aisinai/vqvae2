@@ -1,7 +1,7 @@
 /FID_Score/*
 /__pycache__/*
 /.ipynb_checkpoints/*
-*.ipynb
+prototyping.ipynb
 prototyping_dataset.py
 /test_images/*
 /file_sizes/*
