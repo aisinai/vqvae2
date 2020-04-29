@@ -69,7 +69,17 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 * To save reconstructed images from trained models
 * To calculate PSNR from saved images (from `create_images.py`)
 
-2. To run the profiling code on DenseNet-121 training, comment out the `@profile` decorator in `line 266` of `networks.py`. Once the training is complete, the `pytorch_memblab` library will output the profiling info directly to terminal.
+2. To run the profiling code on DenseNet-121 training, comment out the `@profile` decorator in `line 266` of `networks.py`. Once the training is complete, the `pytorch_memblab` library will output the profiling info directly to terminal:
+```
+Line # Max usage   Peak usage diff max diff peak  Line Contents
+===============================================================
+   266                                               @profile
+   267                                               def forward(self, input):
+   268   108.90M      164.00M   79.89M  118.00M          if self.input_type == 'latent':
+   269   111.90M      164.00M    3.00M    0.00B              input = self.init_conv(input)  # convert to 3 channel input
+   270   770.49M      788.00M  658.59M  624.00M          output = self.model(input)
+   271   770.49M      840.00M    0.00B   52.00M          return output
+```
 
 
 ### Results
