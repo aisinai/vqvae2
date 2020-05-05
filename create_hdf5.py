@@ -35,8 +35,7 @@ transform_array = [transforms.Resize(args.img_size),
 
 # Generate HDF5 dataset
 for mode in ['valid', 'train']:
-    #     for view in ['frontal', 'lateral']:
-    for view in ['frontal']:
+    for view in ['frontal', 'lateral']:
         image_list_file = f'{DATA_DIR}/{mode}.csv'
         dataset = CXRDataset(dataset=args.CXR_dataset,
                              img_dir=IMG_DIR,
