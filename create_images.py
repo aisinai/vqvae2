@@ -65,8 +65,8 @@ for i, (img, targets) in enumerate(loader):
     loader.set_description(f'Model {args.model_name}:')
     real_img = Variable(img.type(Tensor))
     decoded_img, _ = model(real_img)
-    real_img = real_img * std - mean
-    decoded_img = decoded_img * std - mean
+    real_img = real_img * std + mean
+    decoded_img = decoded_img * std + mean
     for j in range(img.shape[0]):
         save_image(rgb2gray(real_img[j, :]).data,
                    f'{save_orig_path}/{str(i * batch_size + j).zfill(4)}.png',
