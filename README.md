@@ -65,9 +65,15 @@ Note: checkpoint files can be found in the `[save_path]/ceckpoints` directory fr
 ### Testing
 
 1. Use the `test_model.ipynb` Jupyter Notebook to:
-* To create a padded image from any image file to fit into a square perspective ratio
-* To save reconstructed images from trained models
-* To calculate PSNR from saved images (from `create_images.py`)
+* create a padded image from any image file to fit into a square perspective ratio
+* save reconstructed images from trained models
+* calculate PSNR from saved images (from `create_images.py`)
+
+Note: loading saved models require CUDA enabled devices. If the device does not have CUDA, load the file with:
+
+```
+torch.load('checkpoint.pt', location: 'cpu')
+```
 
 2. To run the profiling code on DenseNet-121 training, comment out the `@profile` decorator in `line 266` of `networks.py`. Once the training is complete, the `pytorch_memblab` library will output the profiling info directly to terminal:
 ```
