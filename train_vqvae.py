@@ -22,7 +22,7 @@ parser.add_argument('--embed_dim', type=int, default=64)
 parser.add_argument('--data_path', type=str, default='/home/aisinai/work/HDF5_datasets')
 parser.add_argument('--dataset', type=str, default='CheXpert', help="CheXpert or mimic")
 parser.add_argument('--view', type=str, default='frontal', help="frontal or lateral")
-parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200422/vq_vae')
+parser.add_argument('--save_path', type=str, default='/home/aisinai/work/VQ-VAE2/20200820/vq_vae')
 parser.add_argument('--train_run', type=str, default='0')
 args = parser.parse_args()
 torch.manual_seed(816)
@@ -37,11 +37,11 @@ with open(f'{save_path}/args.txt', 'w') as f:
         print(f'{key}: {vars(args)[key]}')
 
 dataloaders = {}
-dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{args.view}.hdf5'),
+dataloaders['train'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_train_{args.size}_{args.view}_normalized.hdf5'),
                                   batch_size=128,
                                   shuffle=True,
                                   drop_last=True)
-dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.view}.hdf5'),
+dataloaders['valid'] = DataLoader(ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.view}_normalized.hdf5'),
                                   batch_size=128,
                                   shuffle=True,
                                   drop_last=True)

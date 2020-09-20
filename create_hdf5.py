@@ -1,16 +1,12 @@
 import argparse
 import os
 import h5py
-import numpy as np
 from torchvision import transforms
-from torch.utils.data import Dataset
-from PIL import Image
 from utilities import CXRDataset
 
 #########################
 # GENERATE HDF5 DATASET #
 # ########################
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--img_size', type=int, default=256)
@@ -35,7 +31,8 @@ transform_array = [transforms.Resize(args.img_size),
 
 # Generate HDF5 dataset
 for mode in ['valid', 'train']:
-    for view in ['frontal', 'lateral']:
+    # for view in ['frontal', 'lateral']:
+    for view in ['frontal']:
         image_list_file = f'{DATA_DIR}/{mode}.csv'
         dataset = CXRDataset(dataset=args.CXR_dataset,
                              img_dir=IMG_DIR,
@@ -46,7 +43,7 @@ for mode in ['valid', 'train']:
                              transform=transforms.Compose(transform_array))
         num_images = len(dataset)  # total number of images in train set
         shape = (num_images, nc, args.crop_size, args.crop_size)
-        hdf5 = h5py.File(f'{HDF5_DIR}/{args.CXR_dataset}_{mode}_{args.crop_size}_{view}.hdf5', 'w')
+        hdf5 = h5py.File(f'{HDF5_DIR}/{args.CXR_dataset}_{mode}_{args.crop_size}_{view}_normalized.hdf5', 'w')
         hdf5.create_dataset('img', shape)
         hdf5.create_dataset('labels', (num_images, num_label))
 

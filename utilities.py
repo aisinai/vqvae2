@@ -110,19 +110,17 @@ def recon_image(n_row, original_img, model, save_path, epoch, Tensor):
         out, _ = model(original_img)
 
     # remove normalization
-    mean = torch.FloatTensor([0.485, 0.456, 0.406]
-                             ).reshape(3, 1, 1).type(Tensor)
-    std = torch.FloatTensor([0.229, 0.224, 0.225]
-                            ).reshape(3, 1, 1).type(Tensor)
-    original_img = original_img * std - mean
-    out = out * std - mean
+    mean = torch.FloatTensor([0.485, 0.456, 0.406]).reshape(3, 1, 1).type(Tensor)
+    std = torch.FloatTensor([0.229, 0.224, 0.225]).reshape(3, 1, 1).type(Tensor)
+    original_img = original_img * std + mean
+    out = out * std + mean
 
     save_image(original_img.data, f'{save_path}/sample/original.png',
-               nrow=n_row, normalize=True, range=(-1, 1))
+               nrow=n_row, normalize=True, range=(0, 1))
     save_image(out.data, f'{save_path}/sample/{str(epoch + 1).zfill(4)}.png',
-               nrow=n_row, normalize=True, range=(-1, 1))
+               nrow=n_row, normalize=True, range=(0, 1))
     save_image(torch.cat([original_img, out], 0).data, f'{save_path}/sample/flat_{str(epoch + 1).zfill(4)}.png',
-               nrow=n_row**2, normalize=True, range=(-1, 1))
+               nrow=n_row**2, normalize=True, range=(0, 1))
     model.train()
 
 

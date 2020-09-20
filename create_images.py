@@ -25,7 +25,7 @@ args = parser.parse_args()
 if args.model_name == 'D':
     dataset = ChestXrayHDF5('/home/aisinai/work/HDF5_datasets/recon_latent/mimic_valid_256_orig.hdf5')
 else:
-    dataset = ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.view}.hdf5')
+    dataset = ChestXrayHDF5(f'{args.data_path}/{args.dataset}_valid_{args.size}_{args.view}_normalized.hdf5')
 batch_size = 4
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False)
 
@@ -68,9 +68,9 @@ for i, (img, targets) in enumerate(loader):
     real_img = real_img * std + mean
     decoded_img = decoded_img * std + mean
     for j in range(img.shape[0]):
-        save_image(rgb2gray(real_img[j, :]).data,
+        save_image(real_img[j, :].data,
                    f'{save_orig_path}/{str(i * batch_size + j).zfill(4)}.png',
-                   nrow=1, normalize=True, range=(-1, 1))
-        save_image(rgb2gray(decoded_img[j, :]).data,
+                   nrow=1, normalize=True, range=(0, 1))
+        save_image(decoded_img[j, :].data,
                    f'{save_recon_path}/{str(i * batch_size + j).zfill(4)}.png',
-                   nrow=1, normalize=True, range=(-1, 1))
+                   nrow=1, normalize=True, range=(0, 1))
